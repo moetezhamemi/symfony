@@ -1,0 +1,7 @@
+# Utilise l'image de base app-php
+FROM ${IMAGES_PREFIX:-}app-php
+
+# Installe les extensions PHP nécessaires pour PostgreSQL
+RUN apk add --no-cache postgresql-dev \
+    && docker-php-ext-install pdo_pgsql pgsql
+RUN apt-get update && apt-get install -y libpq-dev && docker-php-ext-install pdo_pgsql pgsql
