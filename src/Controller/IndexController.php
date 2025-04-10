@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Controller;
-
+use App\Entity\Category;
+use App\Form\ArticleType;
 use App\Entity\Article;
+use App\Form\CategoryType;
 use App\Repository\ArticleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,7 +19,6 @@ class IndexController extends AbstractController
     #[Route('/', name: 'article_list')]
     public function home(ArticleRepository $articleRepository): Response
     {
-        // Récupérer tous les articles de la table article
         $articles = $articleRepository->findAll();
 
         return $this->render('articles/index.html.twig', [
@@ -42,25 +43,18 @@ class IndexController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $article = new Article();
-        $form = $this->createFormBuilder($article)
-            ->add('nom', TextType::class)
-            ->add('prix', TextType::class)
-            ->add('save', SubmitType::class, [
-                'label' => 'Créer',
-            ])
-            ->getForm();
-
+        $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($article);
             $entityManager->flush();
-
+            
             return $this->redirectToRoute('article_list');
         }
 
         return $this->render('articles/new.html.twig', [
-            'form' => $form->createView(),
+            'form' => $form->createView()
         ]);
     }
 
@@ -72,28 +66,26 @@ class IndexController extends AbstractController
         ]);
     }
     #[Route('/article/edit/{id}', name: 'edit_article', methods: ['GET', 'POST'])]
-public function edit(Request $request, Article $article, EntityManagerInterface $entityManager): Response
-{
-    $form = $this->createFormBuilder($article)
-        ->add('nom', TextType::class)
-        ->add('prix', TextType::class)
-        ->add('save', SubmitType::class, [
-            'label' => 'Modifier',
-        ])
-        ->getForm();
-
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $entityManager->flush();
-
-        return $this->redirectToRoute('article_list');
+    public function edit(Request $request, int $id, EntityManagerInterface $entityManager): Response
+    {
+        $article = $entityManager->getRepository(Article::class)->find($id);
+        
+        if (!$article) {
+            throw $this->createNotFoundException('Article non trouvé');
+        }
+        
+        $form = $this->createForm(ArticleType::class, $article);
+        $form->handleRequest($request);
+    
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+            return $this->redirectToRoute('article_list');
+        }
+    
+        return $this->render('articles/edit.html.twig', [
+            'form' => $form->createView()
+        ]);
     }
-
-    return $this->render('articles/edit.html.twig', [
-        'form' => $form->createView(),
-    ]);
-}
 #[Route('/article/delete/{id}', name: 'delete_article', methods: ['DELETE','POST'])]
 public function delete(Request $request, Article $article, EntityManagerInterface $entityManager): Response
 {
@@ -104,4 +96,21 @@ public function delete(Request $request, Article $article, EntityManagerInterfac
 
     return $this->redirectToRoute('article_list');
 }
+#[Route('/category/newCat', name: 'new_category', methods: ['GET', 'POST'])]
+public function newCategory(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $category = new Category();
+        $form = $this->createForm(CategoryType::class, $category);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($category);
+            $entityManager->flush();
+            return $this->redirectToRoute('new_category'); // À ajuster selon votre logique
+        }
+
+        return $this->render('articles/newCategory.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
 }
