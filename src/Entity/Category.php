@@ -27,9 +27,16 @@ class Category
     #[ORM\OneToMany(targetEntity: Article::class, mappedBy: 'category')]
     private Collection $articles;
 
+    /**
+     * @var Collection<int, CategotySearch>
+     */
+    #[ORM\OneToMany(targetEntity: CategotySearch::class, mappedBy: 'category')]
+    private Collection $categotySearches;
+
     public function __construct()
     {
         $this->articles = new ArrayCollection();
+        $this->categotySearches = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -85,6 +92,36 @@ class Category
             // set the owning side to null (unless already changed)
             if ($article->getCategory() === $this) {
                 $article->setCategory(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CategotySearch>
+     */
+    public function getCategotySearches(): Collection
+    {
+        return $this->categotySearches;
+    }
+
+    public function addCategotySearch(CategotySearch $categotySearch): static
+    {
+        if (!$this->categotySearches->contains($categotySearch)) {
+            $this->categotySearches->add($categotySearch);
+            $categotySearch->setCategory($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCategotySearch(CategotySearch $categotySearch): static
+    {
+        if ($this->categotySearches->removeElement($categotySearch)) {
+            // set the owning side to null (unless already changed)
+            if ($categotySearch->getCategory() === $this) {
+                $categotySearch->setCategory(null);
             }
         }
 
